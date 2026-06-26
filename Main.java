@@ -44,3 +44,13 @@ public class Main {
                     System.out.print("Dias de plazo para responder: ");
                     int diasPlazo = sc.nextInt();
                     sc.nextLine();
+
+                case 2:
+
+                case 3:
+                    
+                case 4:
+                    
+                case 5:
+                    
+                case 0:
