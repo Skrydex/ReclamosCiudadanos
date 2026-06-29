@@ -2,11 +2,11 @@ package reclamosmunicipales;
 
 /**
  *
- * @author basti
+ * @author ale
  */
 public class ListaReclamos {
 
-    // clase interna del nodo
+    // Clase interna del nodo
     private class NodoReclamo {
         Reclamo reclamo;
         NodoReclamo siguiente;
@@ -25,7 +25,7 @@ public class ListaReclamos {
         this.cantidad = 0;
     }
 
-    // insercion al final
+    // Insercion al final, O(n) ya que recorremos hasta el ultimo nodo
     public void agregar(Reclamo reclamo){
         NodoReclamo nuevo = new NodoReclamo(reclamo);
 
@@ -41,7 +41,7 @@ public class ListaReclamos {
         cantidad++;
     }
 
-    // eliminacion por codigo
+    // Eliminacion por codigo, O(n) ya que hay que recorrer la lista
     public boolean eliminar(int codigo){
         if(cabeza == null){
             return false;
@@ -66,7 +66,7 @@ public class ListaReclamos {
         return false;
     }
 
-    // convierte la lista enlazada a arreglo, para poder ordenar y buscar facilmente cualqueir reclamo
+    // Convierte la lista enlazada a arreglo, para poder ordenar y buscar facilmente
     public Reclamo[] aArreglo(){
         Reclamo[] arreglo = new Reclamo[cantidad];
         NodoReclamo actual = cabeza;
@@ -98,3 +98,4 @@ public class ListaReclamos {
         return cantidad;
     }
 }
+
