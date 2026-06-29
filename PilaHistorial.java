@@ -1,11 +1,6 @@
 package reclamosmunicipales;
 
-/**
- *
- * @author basti
- */
 public class PilaHistorial {
-
     // Clase interna del nodo, mantiene el proyecto compacto
     private class NodoHistorial {
         String cambio;
@@ -67,11 +62,3 @@ public class PilaHistorial {
         return cantidad;
     }
 }
-
-    public String desapilar() {
-        if (tope == null) return null;
-        String cambio = tope.cambio;
-        tope = tope.siguiente;
-        cantidad--;
-        return cambio;
-    }
