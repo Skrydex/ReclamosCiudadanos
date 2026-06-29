@@ -1,0 +1,231 @@
+package reclamosmunicipales;
+
+/**
+ * Implementacion de Arbol AVL (Arbol Binario de Busqueda Auto-balanceado)
+ * Organiza los reclamos por nivel de prioridad (1 alta, 2 media, 3 baja)
+ * y mantiene el equilibrio mediante rotaciones simples y dobles.
+ */
+public class AVLReclamos {
+
+    private class NodoAVL {
+        Reclamo reclamo;
+        NodoAVL izquierdo;
+        NodoAVL derecho;
+        int altura;
+
+        NodoAVL(Reclamo reclamo) {
+            this.reclamo = reclamo;
+            this.izquierdo = null;
+            this.derecho = null;
+            this.altura = 1;
+        }
+    }
+
+    private NodoAVL raiz;
+
+    public AVLReclamos() {
+        this.raiz = null;
+    }
+
+    private int obtenerAltura(NodoAVL nodo) {
+        return nodo == null ? 0 : nodo.altura;
+    }
+
+    private int obtenerFactorBalance(NodoAVL nodo) {
+        return nodo == null ? 0 : obtenerAltura(nodo.izquierdo) - obtenerAltura(nodo.derecho);
+    }
+
+    private void actualizarAltura(NodoAVL nodo) {
+        if (nodo != null) {
+            nodo.altura = 1 + Math.max(obtenerAltura(nodo.izquierdo), obtenerAltura(nodo.derecho));
+        }
+    }
+
+    private long obtenerClave(Reclamo reclamo) {
+        return (long) reclamo.getPrioridad() * 1000000L + reclamo.getCodigo();
+    }
+
+    // Rotacion a la derecha (LL)
+    private NodoAVL rotacionDerecha(NodoAVL y) {
+        NodoAVL x = y.izquierdo;
+        NodoAVL T2 = x.derecho;
+
+        x.derecho = y;
+        y.izquierdo = T2;
+
+        actualizarAltura(y);
+        actualizarAltura(x);
+
+        return x;
+    }
+
+    // Rotacion a la izquierda (RR)
+    private NodoAVL rotacionIzquierda(NodoAVL x) {
+        NodoAVL y = x.derecho;
+        NodoAVL T2 = y.izquierdo;
+
+        y.izquierdo = x;
+        x.derecho = T2;
+
+        actualizarAltura(x);
+        actualizarAltura(y);
+
+        return y;
+    }
+
+    public void insertar(Reclamo reclamo) {
+        raiz = insertarRecursivo(raiz, reclamo);
+    }
+
+    private NodoAVL insertarRecursivo(NodoAVL nodo, Reclamo reclamo) {
+        if (nodo == null) {
+            return new NodoAVL(reclamo);
+        }
+
+        long claveNueva = obtenerClave(reclamo);
+        long claveActual = obtenerClave(nodo.reclamo);
+
+        if (claveNueva < claveActual) {
+            nodo.izquierdo = insertarRecursivo(nodo.izquierdo, reclamo);
+        } else if (claveNueva > claveActual) {
+            nodo.derecho = insertarRecursivo(nodo.derecho, reclamo);
+        } else {
+            return nodo; // No permitir duplicados exactos de clave
+        }
+
+        actualizarAltura(nodo);
+        int balance = obtenerFactorBalance(nodo);
+
+        // Caso Izquierda-Izquierda (LL)
+        if (balance > 1 && claveNueva < obtenerClave(nodo.izquierdo.reclamo)) {
+            return rotacionDerecha(nodo);
+        }
+
+        // Caso Derecha-Derecha (RR)
+        if (balance < -1 && claveNueva > obtenerClave(nodo.derecho.reclamo)) {
+            return rotacionIzquierda(nodo);
+        }
+
+        // Caso Izquierda-Derecha (LR)
+        if (balance > 1 && claveNueva > obtenerClave(nodo.izquierdo.reclamo)) {
+            nodo.izquierdo = rotacionIzquierda(nodo.izquierdo);
+            return rotacionDerecha(nodo);
+        }
+
+        // Caso Derecha-Izquierda (RL)
+        if (balance < -1 && claveNueva < obtenerClave(nodo.derecho.reclamo)) {
+            nodo.derecho = rotacionDerecha(nodo.derecho);
+            return rotacionIzquierda(nodo);
+        }
+
+        return nodo;
+    }
+
+    public void eliminar(int codigo) {
+        raiz = eliminarRecursivo(raiz, codigo);
+    }
+
+    private NodoAVL eliminarRecursivo(NodoAVL nodo, int codigo) {
+        if (nodo == null) return null;
+
+        long claveBuscada = buscarClavePorCodigo(raiz, codigo);
+        if (claveBuscada == -1) return nodo;
+
+        long claveActual = obtenerClave(nodo.reclamo);
+
+        if (claveBuscada < claveActual) {
+            nodo.izquierdo = eliminarRecursivo(nodo.izquierdo, codigo);
+        } else if (claveBuscada > claveActual) {
+            nodo.derecho = eliminarRecursivo(nodo.derecho, codigo);
+        } else {
+            if (nodo.izquierdo == null || nodo.derecho == null) {
+                NodoAVL temp = (nodo.izquierdo != null) ? nodo.izquierdo : nodo.derecho;
+                if (temp == null) {
+                    temp = nodo;
+                    nodo = null;
+                } else {
+                    nodo = temp;
+                }
+            } else {
+                NodoAVL sucesor = obtenerMinimo(nodo.derecho);
+                nodo.reclamo = sucesor.reclamo;
+                nodo.derecho = eliminarRecursivo(nodo.derecho, sucesor.reclamo.getCodigo());
+            }
+        }
+
+        if (nodo == null) return null;
+
+        actualizarAltura(nodo);
+        int balance = obtenerFactorBalance(nodo);
+
+        // Casos de balanceo tras eliminacion
+        if (balance > 1 && obtenerFactorBalance(nodo.izquierdo) >= 0) {
+            return rotacionDerecha(nodo);
+        }
+        if (balance > 1 && obtenerFactorBalance(nodo.izquierdo) < 0) {
+            nodo.izquierdo = rotacionIzquierda(nodo.izquierdo);
+            return rotacionDerecha(nodo);
+        }
+        if (balance < -1 && obtenerFactorBalance(nodo.derecho) <= 0) {
+            return rotacionIzquierda(nodo);
+        }
+        if (balance < -1 && obtenerFactorBalance(nodo.derecho) > 0) {
+            nodo.derecho = rotacionDerecha(nodo.derecho);
+            return rotacionIzquierda(nodo);
+        }
+
+        return nodo;
+    }
+
+    private long buscarClavePorCodigo(NodoAVL nodo, int codigo) {
+        if (nodo == null) return -1;
+        if (nodo.reclamo.getCodigo() == codigo) return obtenerClave(nodo.reclamo);
+        long izq = buscarClavePorCodigo(nodo.izquierdo, codigo);
+        return izq != -1 ? izq : buscarClavePorCodigo(nodo.derecho, codigo);
+    }
+
+    private NodoAVL obtenerMinimo(NodoAVL nodo) {
+        NodoAVL actual = nodo;
+        while (actual.izquierdo != null) actual = actual.izquierdo;
+        return actual;
+    }
+
+    public void mostrarInorden() {
+        System.out.println("Recorrido inorden (AVL por Prioridad):");
+        inordenRecursivo(raiz);
+    }
+
+    private void inordenRecursivo(NodoAVL nodo) {
+        if (nodo != null) {
+            inordenRecursivo(nodo.izquierdo);
+            System.out.println(nodo.reclamo + " | Altura: " + nodo.altura + " | Factor Balance: " + obtenerFactorBalance(nodo));
+            inordenRecursivo(nodo.derecho);
+        }
+    }
+
+    public void mostrarPreorden() {
+        System.out.println("Recorrido preorden (AVL por Prioridad):");
+        preordenRecursivo(raiz);
+    }
+
+    private void preordenRecursivo(NodoAVL nodo) {
+        if (nodo != null) {
+            System.out.println(nodo.reclamo + " | Altura: " + nodo.altura + " | Factor Balance: " + obtenerFactorBalance(nodo));
+            preordenRecursivo(nodo.izquierdo);
+            preordenRecursivo(nodo.derecho);
+        }
+    }
+
+    public void mostrarPostorden() {
+        System.out.println("Recorrido postorden (AVL por Prioridad):");
+        postordenRecursivo(raiz);
+    }
+
+    private void postordenRecursivo(NodoAVL nodo) {
+        if (nodo != null) {
+            postordenRecursivo(nodo.izquierdo);
+            postordenRecursivo(nodo.derecho);
+            System.out.println(nodo.reclamo + " | Altura: " + nodo.altura + " | Factor Balance: " + obtenerFactorBalance(nodo));
+        }
+    }
+}
